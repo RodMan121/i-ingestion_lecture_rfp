@@ -1,63 +1,70 @@
+---
+version: 1.1.0
+date: 2026-04-24
+compatible_avec: ABB-02 >= 1.0
+statut: PRODUCTION_READY
+---
+
 # 🧠 LLM MASTER KNOWLEDGE : Pipeline d'Ingestion RFP (ABB-01)
 
 Ce document est la source de vérité pour comprendre l'architecture, l'historique et l'utilisation du Hub d'Ingestion RFP.
 
 ## 1. GENÈSE ET OBJECTIF (Le "Pourquoi")
-**Problème :** L'analyse d'un appel d'offres (RFP) commence souvent par des heures de copier-coller depuis des PDF mal structurés. Cette étape est chronophage (2-4h) et source d'erreurs.
+**Problème :** L'analyse d'un appel d'offres (RFP) commence par des heures de copier-coller (2-4h).
 **Solution :** Un pipeline industriel qui transforme le "vrac" documentaire en données certifiées en moins de 30 minutes.
-**Objectif final :** Produire un Markdown structuré et des CSV de tableaux qui servent de "Carburant Fiable" pour l'IA d'analyse des exigences (ABB-02).
+**Objectif final :** Produire un Markdown structuré et des CSV qui servent de "Carburant Fiable" pour l'IA (ABB-02).
 
-## 2. ARCHITECTURE TECHNIQUE
+## 2. MODES OPÉRATOIRES (SBB)
 
-```mermaid
-graph TD
-    A[Documents Bruts /01-rfp-source] --> B{Classification}
-    B -->|Mots-clés| C[Attribution de Rôle: CCTP, CCAP, BPU...]
-    C --> D[Moteur Docling - Parsing IA]
-    D --> E{Fiabilité Absolue}
-    E -->|Scoring| F[Confiance OCR par Bloc]
-    E -->|Audit| G[Réconciliation PyMuPDF]
-    E -->|Intégrité| H[SHA256 du Source]
-    F & G & H --> I[Génération MANIFEST.json]
-    I --> J[Bibliothèque prête pour IA]
+### SBB-01A : Lecture Manuelle (Fallback)
+*Protocole à activer si le PDF est un scan de mauvaise qualité ou délai < 2j.*
+1. **Passe 1 (Cartographie)** : Identifier les sections et tableaux sans écrire. Repérer les zones denses.
+2. **Passe 2 (Extraction)** : Isoler uniquement les obligations (*shall/must/doit*) dans `REQUIREMENTS.md`.
+3. **Passe 3 (Audit)** : Recopie binaire des tableaux contractuels les plus engageants.
+
+### SBB-01B : Pipeline Docling (Automatisé)
+*Moteur IA de parsing structuré couplé à une réconciliation binaire.*
+- **Classification** : Basée sur mots-clés (CCTP, CCAP, RC, BPU).
+- **Flexibilité** : Possibilité de forcer un rôle si le nom du fichier est ambigu.
+- **Connectivité** : S'appuie sur `DOCLING_SERVE_URL` (défaut : port 5001).
+
+## 3. MÉTRIQUES DE FIABILITÉ (Seuils de Confiance)
+
+Le pipeline marque chaque bloc de texte selon son score de confiance OCR :
+- **✅ FIABLE (> 0.90)** : Confiance totale dans l'extraction.
+- **⚠️ VIGILANCE (0.70 - 0.90)** : Risque de caractères mal reconnus. Vérification ciblée requise.
+- **🔴 CRITIQUE (< 0.70)** : Texte probablement corrompu. Validation humaine obligatoire avant usage.
+
+## 4. SCHÉMA DU MANIFESTE (`MANIFEST.json`)
+C'est l'index unique de la session de travail pour les agents IA avals.
+```json
+{
+  "source": "/chemin/vers/pdf",
+  "date": "2026-04-24T18:00:00",
+  "statut_global": "FIABLE | VÉRIFICATION_REQUISE",
+  "details": [
+    {
+      "fichier": "nom_original.pdf",
+      "role": "CCTP",
+      "sha256": "empreinte_unique",
+      "markdown_file": "rfp-structured.md",
+      "confiance_globale": 0.94
+    }
+  ]
+}
 ```
 
-## 3. LES 3 DIMENSIONS DE LA FIABILITÉ
-Le pipeline repose sur trois piliers pour garantir qu'aucune information n'est perdue :
-1.  **Fidélité Textuelle :** Comparaison du texte extrait par l'IA vs texte binaire (PyMuPDF).
-2.  **Intégrité Structurelle :** Conservation de la hiérarchie (H1..H5) et des listes.
-3.  **Complétude :** Extraction isolée de chaque tableau en CSV pour éviter les fusions de cellules illisibles en Markdown.
+## 5. GESTION DES CAS D'ERREUR
+- **Serveur Docling inaccessible** : Le script s'arrête proprement après vérification du `/health`.
+- **Fichier Protégé/Corrompu** : Log d'erreur dans les métadonnées et poursuite du lot.
+- **Document "Image Pure"** : Déclenchement automatique de la capture HD de page si < 5 blocs texte détectés.
 
-## 4. MODES OPÉRATOIRES (SBB)
-- **SBB-01A (Manuel) :** Protocole de lecture en 3 passes pour les cas désespérés (scans illisibles).
-- **SBB-01B (Automatisé) :** Utilisation du script `parse-rfp.py` couplé au serveur Docling.
-- **Variantes de Fiabilité :**
-    - *Variante A :* Stockage du JSON brut (`SOURCE-OF-TRUTH.json`).
-    - *Variante B :* Rapport de réconciliation par page.
-    - *Variante C :* Marquage visuel des incertitudes (🔴/⚠️) dans le texte.
-
-## 5. INSTALLATION ET PRÉREQUIS
-- **Python 3.10+** et **Serveur Docling** (port 5001).
-- **Environnement :** `venv-avant-vente`.
-- **Commandes clés :**
-  ```bash
-  pip install docling pandas httpx pymupdf Pillow
-  python 00-GOUVERNANCE/scripts/parse-rfp.py <source> <destination>
-  ```
-
-## 6. STRUCTURE DES ARTEFACTS GÉNÉRÉS
-Chaque document produit un dossier contenant :
-- `rfp-structured.md` : Texte structuré pour le LLM.
-- `tables/*.csv` : Données tabulaires (SLA, Prix).
-- `rapport-parsing.json` : Stats, SHA256 et alertes.
-- `MANIFEST.json` : Index central de la session de travail.
-
-## 7. CONSIGNES POUR LE LLM CONSOMMATEUR
+## 6. CONSIGNES POUR LE LLM CONSOMMATEUR
 *Si tu es un LLM et que tu lis ce document :*
-1.  **Priorité :** Le CCTP est ta source primaire.
-2.  **Prudence :** Ignore les blocs marqués 🔴, demande confirmation pour les ⚠️.
-3.  **Validation :** Toujours vérifier si le SHA256 du document a changé avant de mettre à jour une analyse.
-4.  **Traçabilité :** Cite toujours le numéro de page ou le fichier CSV source dans tes réponses.
+1. **Hiérarchie** : Le CCTP est ta source absolue. Le CCAP définit les règles juridiques.
+2. **Intégrité** : Vérifie toujours que le SHA256 n'a pas changé entre deux analyses d'un même document.
+3. **Prudence** : Si tu extrais une donnée d'un bloc marqué 🔴 ou ⚠️, tu DOIS le mentionner dans ton output.
+4. **Localisation** : Cite toujours le fichier CSV ou la page Markdown d'origine pour chaque affirmation.
 
 ---
-*Fin du Master Knowledge — Prêt pour injection IA.*
+*Master Knowledge v1.1.0 — Prêt pour injection IA.*
