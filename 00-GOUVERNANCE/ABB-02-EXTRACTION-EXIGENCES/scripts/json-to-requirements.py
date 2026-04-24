@@ -5,28 +5,28 @@ import sys
 
 def json_to_requirements(json_path: str, output_path: str, client: str, objet: str):
     """
-    Transforme le JSON produit par le LLM en REQUIREMENTS.md
+    Transforme le JSON produit par le LLM (Format v2.1.0) en REQUIREMENTS.md
     """
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+            full_data = json.load(f)
+            # Support du nouveau format avec 'meta' et 'extraction'
+            data = full_data.get("extraction", full_data)
+            meta = full_data.get("meta", {})
     except Exception as e:
-        print(f"Erreur lecture JSON : {e}")
-        # Tentative de nettoyage si Ollama a mis du texte avant/après
-        content = Path(json_path).read_text(encoding='utf-8')
-        if "{" in content:
-            data = json.loads(content[content.find("{"):content.rfind("}")+1])
-        else:
-            raise e
+        print(f"❌ Erreur lecture JSON : {e}")
+        return
 
     lines = []
     lines.append(f"# REQUIREMENTS — {client} — {objet} — v1.0\n\n")
-    lines.append(f"## Métadonnées\n")
-    lines.append(f"- Date création : {date.today()}\n")
-    lines.append(f"- Statut global : EXT (Extrait)\n\n")
+    lines.append(f"## Métadonnées d'extraction IA\n")
+    lines.append(f"- Date traitement : {meta.get('timestamp', date.today())}\n")
+    lines.append(f"- Modèle utilisé : {meta.get('model', 'Inconnu')}\n")
+    lines.append(f"- Statut global : EXT (Extrait)\n")
+    lines.append(f"- Source Hash : `{meta.get('source_hash', 'N/A')}`\n\n")
     
     lines.append("## Référentiel des exigences\n\n")
-    lines.append("| Ref | Intitulé | Type | BDAT | Prio | Statut | Section | Flag |\n")
+    lines.append("| Ref | Intitulé | Type | BDAT | Prio | Statut | Origine | Flag |\n")
     lines.append("|-----|----------|------|------|------|--------|---------|------|\n")
     
     flag_emoji = {
@@ -38,25 +38,21 @@ def json_to_requirements(json_path: str, output_path: str, client: str, objet: s
     for ex in data.get("exigences", []):
         flag = flag_emoji.get(ex.get("flag", "STANDARD"), "⚪")
         lines.append(
-            f"| {ex['ref']} | {ex['intitule']} | "
-            f"{ex['type']} | {ex['bdat']} | {ex['priorite']} | "
-            f"EXT | {ex.get('source_section', '')} | {flag} |\n"
+            f"| {ex.get('ref', 'N/A')} | {ex.get('intitule', 'N/A')} | "
+            f"{ex.get('type', 'N/A')} | {ex.get('bdat', 'N/A')} | {ex.get('priorite', 'N/A')} | "
+            f"EXT | {ex.get('source_origine', 'N/A')} | {flag} |\n"
         )
     
     if data.get("contradictions"):
-        lines.append("\n## Contradictions identifiées\n\n")
+        lines.append("\n## Contradictions / Ambiguïtés détectées\n\n")
         for c in data["contradictions"]:
-            refs = " vs ".join(c.get("refs", []))
-            lines.append(f"- **{refs}** : {c.get('description', '')}\n")
-    
-    if data.get("exigences_implicites_suggerees"):
-        lines.append("\n## Exigences implicites suggérées par l'IA\n")
-        lines.append("*(à valider par l'architecte)*\n\n")
-        for ei in data["exigences_implicites_suggerees"]:
-            lines.append(f"- [ ] {ei}\n")
+            # Gestion du cas où 'refs' est une liste ou une string
+            refs = c.get("refs", [])
+            ref_str = " vs ".join(refs) if isinstance(refs, list) else str(refs)
+            lines.append(f"- **{ref_str}** : {c.get('description', 'Conflit non décrit')}\n")
     
     Path(output_path).write_text("".join(lines), encoding="utf-8")
-    print(f"✅ REQUIREMENTS.md généré : {output_path}")
+    print(f"✅ REQUIREMENTS.md généré avec succès : {output_path}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
