@@ -53,12 +53,19 @@ Nous ne faisons pas confiance aveuglément à l'IA de parsing. Le pipeline véri
 
 ```mermaid
 flowchart TD
-    D1[Fidélité Textuelle] --- |Docling vs PyMuPDF| V1{Ratio > 0.85?}
-    D2[Intégrité Structurelle] --- |Arbre H1...H5| V2{Sections OK?}
-    D3[Complétude] --- |Extraction Tables| V3{Lignes OK?}
+    D1[Fidélité Textuelle] --> V1{Ratio > 0.85?}
+    D2[Intégrité Structurelle] --> V2{Sections OK?}
+    D3[Complétude] --> V3{Lignes OK?}
 
-    V1 & V2 & V3 -->|Succès| FIABLE[Statut FIABLE]
-    V1 | V2 | V3 -->|Échec| VERIF[VÉRIFICATION REQUISE]
+    V1 -->|Échec| VERIF[VÉRIFICATION REQUISE]
+    V2 -->|Échec| VERIF
+    V3 -->|Échec| VERIF
+
+    V1 -->|Succès| OK[Audit Validé]
+    V2 -->|Succès| OK
+    V3 -->|Succès| OK
+    
+    OK --> FIABLE[Statut FIABLE]
 ```
 
 ---
