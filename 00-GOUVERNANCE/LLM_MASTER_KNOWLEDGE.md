@@ -1,51 +1,45 @@
 ---
-version: 2.5.0
+version: 2.7.0
 date: 2026-04-24
 type: Dossier d'Architecture GenAI (DAG)
 target_audience: AI Agents, Solution Architects, Prompt Engineers
 ---
 
-# 🧠 DOSSIER D'ARCHITECTURE : Organisation par ABB
+# 🧠 DOSSIER D'ARCHITECTURE : Hub d'Intelligence Multimodale
 
-## 1. VISION STRATÉGIQUE : La segmentation ABB
-L'architecture est scindée en deux blocs autonomes. Chaque bloc regroupe sa **logique**, son **intelligence** et sa **documentation technique**.
+## 1. VISION STRATÉGIQUE : La Ligne de Confiance
+L'architecture garantit l'intégrité de l'analyse en séparant la **Certification** de la donnée brute de sa **Qualification** métier.
 
 ```mermaid
 graph TD
-    subgraph ABB-01 : INGESTION DU BESOIN
-        DIR1[Dossier ABB-01-INGESTION-BESOIN/]
-        DIR1 --> P1[scripts/ : parse-rfp.py]
-        DIR1 --> PR1[prompts/ : Classification Logic]
-        DIR1 --> DOC1[Docs : Ingestion & Manuel Fallback]
+    subgraph ABB-01 : INGESTION [Dossier ABB-01-INGESTION-BESOIN/]
+        RAW[RFP Brut] --> P1[scripts/parse-rfp.py]
+        P1 --> ARTEFACTS[Dossier Artefacts : .md, .csv, .json]
     end
-
-    subgraph ABB-02 : EXTRACTION DES EXIGENCES
-        DIR2[Dossier ABB-02-EXTRACTION-EXIGENCES/]
-        DIR2 --> P2[scripts/ : extract-multimodal.py]
-        DIR2 --> PR2[prompts/ : Extraction Prompts]
-        DIR2 --> DOC2[Docs : Guide Qualification]
-        P2 --> P3[scripts/ : json-to-requirements.py]
+    
+    subgraph ABB-02 : EXTRACTION [Dossier ABB-02-EXTRACTION-EXIGENCES/]
+        ARTEFACTS --> P2[scripts/extract-multimodal.py]
+        P2 --> P3[scripts/json-to-requirements.py]
+        P3 --> REQ[REQUIREMENTS.md + 🔥 Badges]
     end
 ```
 
+## 2. MODÈLE DE DONNÉES ET FIABILITÉ
+Le pipeline opère sur trois piliers de robustesse :
+
+1. **Hachage Global** : Le `source_hash` (ABB-02) couvre désormais l'intégralité du dossier d'artefacts (Markdown + tous les CSV). Toute modification d'un chiffre dans un tableau invalide l'extraction.
+2. **Batching Déterministe** : Découpage par blocs de 30k caractères avec tri alphabétique des tableaux pour une injection reproductible.
+3. **Double Audit de Confiance** :
+   - **ABB-01** calcule le score OCR.
+   - **ABB-02** interprète les marqueurs (🔴/⚠️) pour flaguer les exigences incertaines.
+
+## 3. LOGIQUE D'EXTRACTION MULTIMODALE
+Le script `extract-multimodal.py` injecte les tableaux CSV dans le **contexte système** (permanent). 
+*Règle d'or IA* : Si un chiffre (SLA, pénalité) diffère entre le texte et le tableau, le **CSV prime**.
+
+## 4. RÉFÉRENTIEL MÉTIER (`REQUIREMENTS.md`)
+Le document final est protégé contre la corruption de format (échappement des caractères `|`). 
+Les exigences jugées **critiques** par l'IA sont marquées du badge 🔥 pour attirer l'attention de l'architecte lors de la revue Gate 1.
 
 ---
-
-## 2. MODÈLE DE DONNÉES PAR ÉTAPE
-
-### Étape 01 (Certification)
-- **Input** : Binaire (.pdf, .xlsx).
-- **Output** : Artefacts normalisés. On ne parle pas encore d'exigences, mais de "données structurées".
-
-### Étape 02 (Qualification)
-- **Input** : Artefacts (.md + .csv).
-- **Output** : Référentiel métier. C'est ici que l'intelligence métier intervient via le LLM.
-
----
-
-## 3. LOGIQUE DE FIABILITÉ (Passage de relais)
-L'ABB-02 ne peut être lancé que si l'ABB-01 a validé le **Score de Confiance**.
-- Si `parse-rfp.py` génère un score < 0.70 sur une section, l'opérateur doit corriger le Markdown avant de lancer `extract-multimodal.py`.
-
----
-*Master Knowledge v2.2.0 — Segmenté par Scripts.*
+*Master Knowledge v2.7.0 — Certifié pour Ingestion Industrielle.*
