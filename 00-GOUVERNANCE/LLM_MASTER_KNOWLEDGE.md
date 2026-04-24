@@ -1,29 +1,57 @@
 ---
-version: 1.3.0
+version: 1.4.0
 date: 2026-04-24
 type: Dossier d'Architecture GenAI (DAG)
 target_audience: AI Agents, Solution Architects, Prompt Engineers
 ---
 
-# 🧠 DOSSIER D'ARCHITECTURE : Hub d'Ingestion RFP (ABB-01)
+# 🧠 DOSSIER D'ARCHITECTURE : Hub d'Ingestion & Extraction RFP
 
-## 1. VISION STRATÉGIQUE : "De la donnée brute à la donnée IA"
-L'objectif est de transformer un flux de documents hétérogènes (PDF, Excel, Word) en une **Base de Vérité Certifiée**. Ce pipeline agit comme un filtre de qualité pour éviter les hallucinations des modèles de langage (LLM).
+## 1. VISION STRATÉGIQUE : "De la donnée brute à l'exigence qualifiée"
+L'architecture se décompose en deux blocs majeurs :
+- **ABB-01 (Ingestion)** : Certification de la donnée source (Docling).
+- **ABB-02 (Extraction)** : Isolation des obligations contractuelles (Ollama/LLM).
 
 ```mermaid
 graph LR
-    subgraph Entrée
-        RAW[RFP Brut]
+    subgraph ABB-01 : Ingestion
+        RAW[RFP Brut] --> DOC[Docling]
+        DOC --> CERT[Donnée Certifiée .md]
     end
-    subgraph Pipeline ABB-01
-        M[Moteur Docling] --> S[Scoring Confiance]
-        S --> R[Réconciliation]
+    subgraph ABB-02 : Extraction
+        CERT --> OLL[Ollama / Local LLM]
+        OLL --> REQ[REQUIREMENTS.md]
     end
-    subgraph Sortie IA
-        CERT[Donnée Certifiée]
-    end
-    RAW --> M
-    R --> CERT
+```
+
+---
+
+## 2. MODÈLE D'EXTRACTION IA (ABB-02)
+L'IA (Mistral/Llama3 via Ollama) opère une transformation de la **Couche Sémantique** vers un **Référentiel d'Exigences** structuré.
+
+### 2.1 Invariant de Sortie : `REQUIREMENTS.md`
+C'est le fichier central du projet. Sa structure est immuable pour garantir la compatibilité avec les outils de chiffrage (BPU) et de cadrage (D1).
+
+### 2.2 Taxonomie d'Analyse
+Chaque exigence extraite par l'IA doit être tagguée :
+- **Type** : Fonctionnel (F), Technique (T), Organisationnel (O), Contractuel (C).
+- **BDAT** : Business, Data, Application, Technology.
+- **Priorité** : OBL (Obligatoire), SOH (Souhaitable).
+
+---
+
+## 3. LOGIQUE DE CONFIANCE ET ESCALADE
+L'ABB-02 hérite des scores de confiance de l'ABB-01.
+
+```mermaid
+flowchart TD
+    MD[Lecture rfp-structured.md] --> CONF{Score > 0.90?}
+    CONF -->|OUI| EXT[Extraction Directe]
+    CONF -->|NON ⚠️| WARN[Extraction avec Flag ATTENTION]
+    CONF -->|NON 🔴| MANUAL[Escalade SBB-01A : Lecture Humaine]
+    
+    EXT & WARN --> JSON[Sortie JSON Extraction]
+    JSON --> REQ_MD[Génération REQUIREMENTS.md]
 ```
 
 ---
