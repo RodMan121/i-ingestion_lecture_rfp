@@ -1,45 +1,43 @@
 ---
-version: 1.7.0
+version: 2.1.0
 date: 2026-04-24
 type: Dossier d'Architecture GenAI (DAG)
 target_audience: AI Agents, Solution Architects, Prompt Engineers
 ---
 
-# 🧠 DOSSIER D'ARCHITECTURE : Hub d'Ingestion & Extraction RFP
+# 🧠 DOSSIER D'ARCHITECTURE : Hub d'Ingestion Multimodale
 
-## 1. VISION STRATÉGIQUE GENAI
-Transformer des documents non structurés en **Contexte Actionnable** pour LLM en garantissant la fidélité binaire et sémantique.
+## 1. VISION STRATÉGIQUE : "L'Intelligence Totale"
+L'ABB-02 ne se contente plus de lire du texte. Il opère désormais en mode **Multimodal**, croisant toutes les sources d'artefacts pour garantir une fiabilité de 100% sur les données contractuelles.
 
 ```mermaid
-graph LR
+graph TD
     subgraph ABB-01 : Ingestion
         RAW[RFP Brut] --> DOC[Docling]
-        DOC --> CERT[Donnée Certifiée .md]
+        DOC --> ARTEFACTS[Dossier Artefacts]
     end
-    subgraph ABB-02 : Extraction
-        CERT --> FIT[Hardware Sizing llmfit]
-        FIT --> BATCH[Batch Processing 400 lines]
-        BATCH --> OLL[Ollama qwen2.5-coder:7b]
+    subgraph ABB-02 : Extraction Multimodale
+        ARTEFACTS --> MD[.md : Sémantique]
+        ARTEFACTS --> CSV[.csv : Précision Tabulaire]
+        ARTEFACTS --> JSON[.json : Audit Confiance]
+        MD & CSV & JSON --> OLL[Ollama qwen2.5-coder:7b]
         OLL --> REQ[REQUIREMENTS.md]
     end
-    RAW -. Audit .-> REQ
 ```
 
 ---
 
-## 2. MODÈLE DE DONNÉES EN COUCHES
-L'IA opère sur trois couches pour minimiser les hallucinations :
+## 2. MODÈLE DE DONNÉES CROISÉES
+L'IA applique des règles de priorité lors de l'analyse :
 
-1. **Couche Sémantique (.md)** : Structure hiérarchique (Arbre de sections).
-2. **Couche Tabulaire (.csv)** : Données de précision (Matrices SLA/Prix).
-3. **Couche Confiance (.json)** : Métadonnées d'audit (Score OCR, SHA256).
+1.  **Source de Vérité Numérique (.csv)** : En cas de contradiction sur un chiffre (SLA, pénalité, prix) entre le texte et un tableau, le **CSV prime**.
+2.  **Audit Contextuel (.json)** : Si le score de confiance OCR est faible, l'exigence est marquée du flag 🔴.
+3.  **Fil d'Ariane Sémantique (.md)** : Fournit le contexte et la localisation (numéro de page, titre de section).
 
 ---
 
-## 3. DIMENSIONNEMENT MATÉRIEL ET BATCH (ABB-02)
-L'étape d'extraction s'appuie sur une infrastructure 100% locale pour des raisons de confidentialité :
-- **Outil de sizing** : `llmfit` évalue la RAM pour garantir la fluidité du modèle `qwen2.5-coder:7b`.
-- **Stratégie de Batch** : Pour éviter la saturation de la fenêtre de contexte, le document est découpé en blocs de **400 lignes**. Chaque bloc est extrait indépendamment avant fusion finale. Cette méthode garantit qu'aucune obligation n'est ignorée ou "résumée" par l'IA.
+## 3. LOGIQUE DE RAISONNEMENT (Fusion des Sources)
+Le script `extract-multimodal.py` injecte l'intégralité du dossier d'artefacts dans la fenêtre de contexte de l'IA (étendant celle-ci à 32k tokens). L'IA devient capable de citer : *"Exigence extraite du paragraphe 4.2 et validée par le tableau SLA-01.csv"*.
 
 ---
 

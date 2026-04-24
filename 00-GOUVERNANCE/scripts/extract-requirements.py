@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "mistral" # ou "llama3" selon votre installation
+MODEL_NAME = "qwen2.5-coder:7b" # Passage au modèle de production 7B
 
 def extract_with_ollama(md_path: str, prompt_path: str, output_json: str):
     """
