@@ -11,9 +11,13 @@ L'ABB-02 transforme les données certifiées en un référentiel métier exploit
 
 ### 1. Extraction IA (Analyse croisée texte/tableaux)
 - **Chemin** : `00-GOUVERNANCE/ABB-02-EXTRACTION-EXIGENCES/scripts/extract-multimodal.py`
+- **Prompt** : `00-GOUVERNANCE/ABB-02-EXTRACTION-EXIGENCES/prompts/PROMPT_PRODUCTION_V1.md`
 - **Usage** :
   ```bash
-  python 00-GOUVERNANCE/ABB-02-EXTRACTION-EXIGENCES/scripts/extract-multimodal.py <dossier_artefacts_doc> <prompt_md> <resultat_json>
+  python 00-GOUVERNANCE/ABB-02-EXTRACTION-EXIGENCES/scripts/extract-multimodal.py \
+    <dossier_artefacts_doc> \
+    00-GOUVERNANCE/ABB-02-EXTRACTION-EXIGENCES/prompts/PROMPT_PRODUCTION_V1.md \
+    <resultat_json>
   ```
 
 ### 2. Génération du Référentiel (Formatage)
