@@ -1,5 +1,5 @@
 ---
-version: 1.4.0
+version: 1.5.0
 date: 2026-04-24
 type: Dossier d'Architecture GenAI (DAG)
 target_audience: AI Agents, Solution Architects, Prompt Engineers
@@ -7,10 +7,8 @@ target_audience: AI Agents, Solution Architects, Prompt Engineers
 
 # 🧠 DOSSIER D'ARCHITECTURE : Hub d'Ingestion & Extraction RFP
 
-## 1. VISION STRATÉGIQUE : "De la donnée brute à l'exigence qualifiée"
-L'architecture se décompose en deux blocs majeurs :
-- **ABB-01 (Ingestion)** : Certification de la donnée source (Docling).
-- **ABB-02 (Extraction)** : Isolation des obligations contractuelles (Ollama/LLM).
+## 1. VISION STRATÉGIQUE GENAI
+Transformer des documents non structurés en **Contexte Actionnable** pour LLM en garantissant la fidélité binaire et sémantique.
 
 ```mermaid
 graph LR
@@ -22,62 +20,21 @@ graph LR
         CERT --> OLL[Ollama / Local LLM]
         OLL --> REQ[REQUIREMENTS.md]
     end
+    RAW -. Audit .-> REQ
 ```
 
 ---
 
-## 2. MODÈLE D'EXTRACTION IA (ABB-02)
-L'IA (Mistral/Llama3 via Ollama) opère une transformation de la **Couche Sémantique** vers un **Référentiel d'Exigences** structuré.
+## 2. MODÈLE DE DONNÉES EN COUCHES
+L'IA opère sur trois couches pour minimiser les hallucinations :
 
-### 2.1 Invariant de Sortie : `REQUIREMENTS.md`
-C'est le fichier central du projet. Sa structure est immuable pour garantir la compatibilité avec les outils de chiffrage (BPU) et de cadrage (D1).
-
-### 2.2 Taxonomie d'Analyse
-Chaque exigence extraite par l'IA doit être tagguée :
-- **Type** : Fonctionnel (F), Technique (T), Organisationnel (O), Contractuel (C).
-- **BDAT** : Business, Data, Application, Technology.
-- **Priorité** : OBL (Obligatoire), SOH (Souhaitable).
+1. **Couche Sémantique (.md)** : Structure hiérarchique (Arbre de sections).
+2. **Couche Tabulaire (.csv)** : Données de précision (Matrices SLA/Prix).
+3. **Couche Confiance (.json)** : Métadonnées d'audit (Score OCR, SHA256).
 
 ---
 
-## 3. LOGIQUE DE CONFIANCE ET ESCALADE
-L'ABB-02 hérite des scores de confiance de l'ABB-01.
-
-```mermaid
-flowchart TD
-    MD[Lecture rfp-structured.md] --> CONF{Score > 0.90?}
-    CONF -->|OUI| EXT[Extraction Directe]
-    CONF -->|NON ⚠️| WARN[Extraction avec Flag ATTENTION]
-    CONF -->|NON 🔴| MANUAL[Escalade SBB-01A : Lecture Humaine]
-    
-    EXT & WARN --> JSON[Sortie JSON Extraction]
-    JSON --> REQ_MD[Génération REQUIREMENTS.md]
-```
-
----
-
-## 2. ARCHITECTURE DES COUCHES DE DONNÉES
-Pour maximiser la précision, nous séparons le document en **3 couches indépendantes** mais reliées. Cela permet à l'IA de choisir le meilleur format selon la question posée.
-
-```mermaid
-graph TD
-    DOC[Document Ingesté] --> C1[Couche SÉMANTIQUE .md]
-    DOC --> C2[Couche TABULAIRE .csv]
-    DOC --> C3[Couche CONFIANCE .json]
-
-    C1 --> |Rôle| HIAR[Navigation & Titres]
-    C2 --> |Rôle| DATA[Précision Chiffrée]
-    C3 --> |Rôle| AUDIT[Scores de certitude]
-```
-
-- **Sémantique** : Arbre hiérarchique pour le chunking et la navigation.
-- **Tabulaire** : Extraction brute des cellules pour éviter la corruption du Markdown.
-- **Confiance** : Audit de chaque mot (OCR Confidence Score).
-
----
-
-## 3. LE CYCLE DE FIABILITÉ (The 3-Pillars)
-Nous ne faisons pas confiance aveuglément à l'IA de parsing. Le pipeline vérifie l'extraction via trois dimensions :
+## 3. LOGIQUE DE FIABILITÉ (The 3-Pillars)
 
 ```mermaid
 flowchart TD
@@ -98,41 +55,30 @@ flowchart TD
 
 ---
 
-## 4. MÉTRIQUES DE CONFIANCE OPÉRATIONNELLES
-L'IA doit adapter son raisonnement en fonction des marqueurs visuels insérés dans le texte :
-
-| Icône | Seuil Confiance | Comportement IA Attendu |
-|:--- |:--- |:--- |
-| ✅ | **> 0.90** | **Affirmation directe**. La donnée est contractuelle. |
-| ⚠️ | **0.70 - 0.90** | **Prudence**. L'IA doit dire : "Sous réserve de vérification..." |
-| 🔴 | **< 0.70** | **Refus**. L'IA doit dire : "Donnée illisible, intervention humaine requise." |
-
----
-
-## 5. ORCHESTRATION PAR LE MANIFESTE
-Le `MANIFEST.json` sert de "Table de Routage" pour les agents IA. Il permet de traiter un lot de documents comme une seule entité cohérente.
-
-```mermaid
-sequenceDiagram
-    participant Agent as Agent IA (ABB-02)
-    participant Manifest as MANIFEST.json
-    participant Files as Fichiers Ingestés
-
-    Agent->>Manifest: Quels sont les documents prioritaires ?
-    Manifest-->>Agent: 1. CCTP (Certifié), 2. BPU (Certifié)
-    Agent->>Files: Lit CCTP (rfp-structured.md)
-    Agent->>Files: Croise avec BPU (tables/table-01.csv)
-    Agent-->>Agent: Raisonnement croisé
+## 4. SCHÉMA D'INTEROPÉRABILITÉ (`MANIFEST.json`)
+Sert de table de routage pour les orchestrateurs d'agents :
+```json
+{
+  "session_id": "ISO-DATE-UID",
+  "statut_global": "FIABLE | VÉRIFICATION_REQUISE",
+  "documents": [
+    {
+      "role": "CCTP",
+      "sha256": "hash",
+      "artefacts": { "markdown": "...", "tables": [] },
+      "confiance_globale": 0.94
+    }
+  ]
+}
 ```
 
 ---
 
-## 6. CONSIGNES DE RAISONNEMENT (Prompting)
-*Instructions fondamentales pour tout LLM consommant cette architecture :*
-
-1. **Hiérarchie Contractuelle** : En cas de conflit, le **CCTP** (Technique) prime sur tout, sauf sur le **CCAP** pour les aspects juridiques/financiers.
-2. **Audit SHA256** : Avant de répondre, valide que l'ID du document (sha256) est identique à celui de ta session précédente.
-3. **Zéro-Invention** : Si une information est absente des 3 couches, réponds : "Donnée non trouvée dans le référentiel certifié".
+## 5. CONSIGNES DE RAISONNEMENT POUR L'IA (System Prompt)
+*Si tu es un agent IA utilisant ce référentiel :*
+1. **Poids Contractuel** : CCTP > Annexes.
+2. **Gestion 🔴/⚠️** : Interdiction d'extraire des faits contractuels depuis des blocs < 0.70 de confiance sans le mentionner.
+3. **Traçabilité** : Toujours citer le SHA256 source et la page Markdown.
 
 ---
-*Master Knowledge v1.3.0 — Architecture Pédagogique pour GenAI.*
+*Master Knowledge v1.5.0 — Certifié pour Ingestion GenAI.*
