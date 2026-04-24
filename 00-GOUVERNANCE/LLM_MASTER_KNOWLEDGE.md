@@ -8,23 +8,26 @@ target_audience: AI Agents, Solution Architects, Prompt Engineers
 # 🧠 DOSSIER D'ARCHITECTURE : Organisation par ABB
 
 ## 1. VISION STRATÉGIQUE : La segmentation ABB
-L'architecture est scindée en deux blocs autonomes. Chaque bloc regroupe sa **logique** (scripts) et son **intelligence** (prompts).
+L'architecture est scindée en deux blocs autonomes. Chaque bloc regroupe sa **logique**, son **intelligence** et sa **documentation technique**.
 
 ```mermaid
 graph TD
     subgraph ABB-01 : INGESTION DU BESOIN
         DIR1[Dossier ABB-01-INGESTION-BESOIN/]
-        DIR1 --> P1[scripts/parse-rfp.py]
+        DIR1 --> P1[scripts/ : parse-rfp.py]
         DIR1 --> PR1[prompts/ : Classification Logic]
+        DIR1 --> DOC1[Docs : Ingestion & Manuel Fallback]
     end
-    
+
     subgraph ABB-02 : EXTRACTION DES EXIGENCES
         DIR2[Dossier ABB-02-EXTRACTION-EXIGENCES/]
-        DIR2 --> P2[scripts/extract-multimodal.py]
+        DIR2 --> P2[scripts/ : extract-multimodal.py]
         DIR2 --> PR2[prompts/ : Extraction Prompts]
-        P2 --> P3[scripts/json-to-requirements.py]
+        DIR2 --> DOC2[Docs : Guide Qualification]
+        P2 --> P3[scripts/ : json-to-requirements.py]
     end
 ```
+
 
 ---
 
