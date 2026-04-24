@@ -1,29 +1,26 @@
 ---
-version: 2.2.0
+version: 2.3.0
 date: 2026-04-24
 type: Dossier d'Architecture GenAI (DAG)
 target_audience: AI Agents, Solution Architects, Prompt Engineers
 ---
 
-# 🧠 DOSSIER D'ARCHITECTURE : Distinction Scripts ABB-01 / ABB-02
+# 🧠 DOSSIER D'ARCHITECTURE : Organisation par ABB
 
-## 1. VISION STRATÉGIQUE : La ligne de démarcation
-L'architecture sépare strictement la **Certification (01)** de la **Qualification (02)** pour éviter toute pollution des exigences par des erreurs de formatage.
+## 1. VISION STRATÉGIQUE : La segmentation ABB
+L'architecture est scindée en deux blocs autonomes pour garantir la séparation des responsabilités.
 
 ```mermaid
 graph TD
-    subgraph ABB-01 : Script 'parse-rfp.py'
-        RAW[RFP Brut] --> DOC[IA Docling]
-        DOC --> ARTEFACTS[Dossier Artefacts : .md, .csv, .json]
+    subgraph ABB-01 : INGESTION [Scripts dans ABB-01-INGESTION/scripts/]
+        RAW[RFP Brut] --> P1[parse-rfp.py]
+        P1 --> ARTEFACTS[Dossier Artefacts]
     end
     
-    subgraph ABB-02 : Script 'extract-multimodal.py'
-        ARTEFACTS --> OLL[Ollama : Analyse Croisée]
-        OLL --> RAW_JSON[exigences_brutes.json]
-    end
-
-    subgraph ABB-02 : Script 'json-to-requirements.py'
-        RAW_JSON --> MD[REQUIREMENTS.md]
+    subgraph ABB-02 : EXTRACTION [Scripts dans ABB-02-EXTRACTION/scripts/]
+        ARTEFACTS --> P2[extract-multimodal.py]
+        P2 --> P3[json-to-requirements.py]
+        P3 --> REQ[REQUIREMENTS.md]
     end
 ```
 

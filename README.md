@@ -1,44 +1,29 @@
-# 🚀 Hub d'Intelligence RFP (Standard ABB-01 & ABB-02)
+# 🚀 Hub d'Intelligence RFP
 
-Ce dispositif industriel est segmenté en deux blocs autonomes, chacun piloté par ses propres scripts.
-
----
-
-## 🏗 Étape 1 : ABB-01 — L'Ingestion (Certification)
-**Script unique** : `00-GOUVERNANCE/scripts/parse-rfp.py`
-
-- **Objectif** : Transformer le "vrac" (PDF, XLSX) en données structurées.
-- **Entrée** : Dossier contenant les documents originaux du client.
-- **Sortie** : Dossier d'ARTEFACTS (Markdown, Tables CSV, Audit JSON).
-- **Action** :
-  ```bash
-  python 00-GOUVERNANCE/scripts/parse-rfp.py "03-PROJETS/RFP-BRUT" "03-PROJETS/ARTIFACTS"
-  ```
+Dispositif industriel segmenté selon le standard d'ingénierie ABB.
 
 ---
 
-## 🏗 Étape 2 : ABB-02 — L'Extraction (Qualification)
-**Scripts dédiés** : `extract-multimodal.py` et `json-to-requirements.py`
-
-- **Objectif** : Isoler les obligations contractuelles à partir des ARTEFACTS.
-- **Entrée** : Le dossier d'artefacts généré par l'ABB-01.
-- **Sortie** : Le fichier `REQUIREMENTS.md` (Pivot de la réponse).
-- **Action (en 2 temps)** :
-  1. **Extraction IA** :
-     ```bash
-     python 00-GOUVERNANCE/scripts/extract-multimodal.py "path/to/artifacts" "prompt.md" "raw.json"
-     ```
-  2. **Génération du Référentiel** :
-     ```bash
-     python 00-GOUVERNANCE/scripts/json-to-requirements.py "raw.json" "REQUIREMENTS.md" "Client" "Objet"
-     ```
+## 🔹 ABB-01 — INGESTION DU BESOIN
+**Rôle** : Certification de la donnée source.
+- **Dossier** : `00-GOUVERNANCE/ABB-01-INGESTION/`
+- **Script** : `parse-rfp.py`
+- **Lancement** : Voir `GUIDE_ABB-01.md`
 
 ---
 
-## 📂 Structure du Dépôt
-- `00-GOUVERNANCE/scripts/` : Le coffre-fort des scripts ABB-01 et ABB-02.
-- `00-GOUVERNANCE/` : Guides et Dossier d'Architecture.
-- `01-REFERENCE/` : Templates (Fiche de réception, Prompt IA).
+## 🔸 ABB-02 — EXTRACTION DES EXIGENCES
+**Rôle** : Production du référentiel d'exigences (`REQUIREMENTS.md`).
+- **Dossier** : `00-GOUVERNANCE/ABB-02-EXTRACTION/`
+- **Scripts** : `extract-multimodal.py`, `json-to-requirements.py`
+- **Lancement** : Voir `GUIDE_ABB-02.md`
 
 ---
-*Fiabilité Absolue — 1 ABB = 1 Script Dédié.*
+
+## 📁 Architecture du Dépôt
+- `00-GOUVERNANCE/` : Cerveau méthodologique et scripts par ABB.
+- `01-REFERENCE/` : Templates contractuels et techniques par ABB.
+- `03-PROJETS/` : Zone de travail confidentielle (Exclue de Git).
+
+---
+*Standard v3.0 — Structuration par ABB.*
