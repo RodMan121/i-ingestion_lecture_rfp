@@ -10,7 +10,8 @@ def safe_markdown(text):
 
 def json_to_requirements(json_path: str, output_path: str, client: str, objet: str):
     """
-    Transforme le JSON robuste (v2.2.0) en REQUIREMENTS.md propre
+    Transforme le JSON robuste (Format v2.3.0) en REQUIREMENTS.md
+    Supporte les exigences critiques sous forme de liste de strings.
     """
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
@@ -29,10 +30,10 @@ def json_to_requirements(json_path: str, output_path: str, client: str, objet: s
     lines.append(f"- Statut global : EXT (Extrait)\n")
     lines.append(f"- Source Hash Global : `{meta.get('source_hash', 'N/A')}`\n\n")
     
-    # Statistiques rapides
     exigences = data.get("exigences", [])
-    critiques = data.get("exigences_critiques", [])
-    lines.append(f"**Stats :** {len(exigences)} exigences extraites, dont {len(critiques)} signalées comme critiques.\n\n")
+    critiques = data.get("exigences_critiques", []) # Liste de strings (Refs)
+
+    lines.append(f"**Indicateurs :** {len(exigences)} exigences détectées, dont {len(critiques)} signalées comme critiques 🔥.\n\n")
 
     lines.append("## Référentiel des exigences\n\n")
     lines.append("| Ref | Intitulé | Type | BDAT | Prio | Statut | Origine | Flag |\n")
@@ -44,19 +45,21 @@ def json_to_requirements(json_path: str, output_path: str, client: str, objet: s
         "STANDARD": "⚪"
     }
     
-    # Tri par référence pour un rendu propre
-    sorted_ex = sorted(exigences, key=lambda x: x.get("ref", ""))
+    # Tri alphabétique par Ref pour la lisibilité
+    sorted_ex = sorted(exigences, key=lambda x: str(x.get("ref", "")))
 
     for ex in sorted_ex:
-        ref = safe_markdown(ex.get("ref"))
-        # Marquage visuel si l'exigence est dans la liste des critiques
+        ref = str(ex.get('ref', 'N/A'))
+        display_ref = safe_markdown(ref)
+        
+        # Ajout du badge critique si la Ref est dans la liste
         if ref in critiques:
-            ref = f"**{ref}** 🔥"
+            display_ref = f"**{display_ref}** 🔥"
             
         flag = flag_emoji.get(ex.get("flag", "STANDARD"), "⚪")
         
         lines.append(
-            f"| {ref} | {safe_markdown(ex.get('intitule'))} | "
+            f"| {display_ref} | {safe_markdown(ex.get('intitule'))} | "
             f"{safe_markdown(ex.get('type'))} | {safe_markdown(ex.get('bdat'))} | "
             f"{safe_markdown(ex.get('priorite'))} | EXT | "
             f"{safe_markdown(ex.get('source_origine'))} | {flag} |\n"
@@ -70,7 +73,7 @@ def json_to_requirements(json_path: str, output_path: str, client: str, objet: s
             lines.append(f"- **{safe_markdown(ref_str)}** : {safe_markdown(c.get('description'))}\n")
     
     Path(output_path).write_text("".join(lines), encoding="utf-8")
-    print(f"✅ REQUIREMENTS.md généré avec succès ({len(exigences)} lignes).")
+    print(f"✅ REQUIREMENTS.md généré : {len(exigences)} exigences (dont {len(critiques)} critiques).")
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
