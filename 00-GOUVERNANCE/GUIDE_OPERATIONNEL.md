@@ -27,6 +27,12 @@ Docling nettoie les logos, extrait les tableaux en CSV et calcule un **Score de 
 ## 🟡 ÉTAPE 2 : Extraction IA (ABB-02)
 Utilisation du LLM Local pour isoler les obligations.
 
+**Prérequis - Hardware Sizing :**
+Vérifiez que votre machine peut supporter le modèle d'extraction (défaut: `qwen2.5-coder:7b`) :
+```bash
+llmfit recommend --limit 5
+```
+
 **Action :**
 ```bash
 python 00-GOUVERNANCE/scripts/extract-requirements.py \

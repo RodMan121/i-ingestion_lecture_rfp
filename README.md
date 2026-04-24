@@ -11,7 +11,8 @@ Ce dispositif industriel transforme le "vrac" documentaire d'un appel d'offres e
 
 ### Étape 2 : ABB-02 — Extraction & Qualification
 **Objectif** : Isoler les obligations contractuelles et les classifier.
-- **Moteur** : LLM Local (Mistral/Llama3 via Ollama).
+- **Moteur** : LLM Local via Ollama (Modèle recommandé : `qwen2.5-coder:7b`).
+- **Hardware Sizing** : Utilisation de `llmfit` pour garantir l'adéquation modèle/matériel.
 - **Sortie** : `REQUIREMENTS.md` (Le référentiel central du projet).
 
 ## 🛠 Installation Rapide
@@ -21,11 +22,13 @@ Ce dispositif industriel transforme le "vrac" documentaire d'un appel d'offres e
 python -m venv venv-avant-vente
 source venv-avant-vente/bin/activate
 
-# 2. Dépendances
+# 2. Dépendances & Outils
 pip install docling pandas httpx pymupdf Pillow
+curl -fsSL https://llmfit.axjns.dev/install.sh | sh # Outil de sizing LLM
 
 # 3. Moteur IA Local (Docker Ollama requis)
-curl http://localhost:11434/api/tags # Vérifie Ollama
+docker start ollama
+docker exec ollama ollama pull qwen2.5-coder:7b
 ```
 
 ## 🚀 Utilisation (Cycle Complet)

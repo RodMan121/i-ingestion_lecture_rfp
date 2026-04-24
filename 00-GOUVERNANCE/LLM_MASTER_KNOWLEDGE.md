@@ -1,5 +1,5 @@
 ---
-version: 1.5.0
+version: 1.6.0
 date: 2026-04-24
 type: Dossier d'Architecture GenAI (DAG)
 target_audience: AI Agents, Solution Architects, Prompt Engineers
@@ -17,7 +17,8 @@ graph LR
         DOC --> CERT[Donnée Certifiée .md]
     end
     subgraph ABB-02 : Extraction
-        CERT --> OLL[Ollama / Local LLM]
+        CERT --> FIT[Hardware Sizing llmfit]
+        FIT --> OLL[Ollama qwen2.5-coder:7b]
         OLL --> REQ[REQUIREMENTS.md]
     end
     RAW -. Audit .-> REQ
@@ -34,7 +35,14 @@ L'IA opère sur trois couches pour minimiser les hallucinations :
 
 ---
 
-## 3. LOGIQUE DE FIABILITÉ (The 3-Pillars)
+## 3. DIMENSIONNEMENT MATÉRIEL ET IA (ABB-02)
+L'étape d'extraction s'appuie sur une infrastructure 100% locale pour des raisons de confidentialité de données :
+- **Outil de sizing** : `llmfit` évalue la RAM et le CPU disponibles pour s'assurer que le modèle tournera sans out-of-memory.
+- **Modèle recommandé** : `qwen2.5-coder:7b`. Ce modèle de 7 milliards de paramètres, quantifié en Q4_K_M ou supérieur, offre le meilleur compromis Vitesse/Logique pour la tâche ardue de l'extraction d'exigences contractuelles.
+
+---
+
+## 4. LOGIQUE DE FIABILITÉ (The 3-Pillars)
 
 ```mermaid
 flowchart TD
