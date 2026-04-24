@@ -1,70 +1,82 @@
 ---
-version: 1.1.0
+version: 1.2.0
 date: 2026-04-24
-compatible_avec: ABB-02 >= 1.0
-statut: PRODUCTION_READY
+type: Dossier d'Architecture GenAI (DAG)
+target_audience: AI Agents, Solution Architects, Prompt Engineers
 ---
 
-# 🧠 LLM MASTER KNOWLEDGE : Pipeline d'Ingestion RFP (ABB-01)
+# 🧠 DOSSIER D'ARCHITECTURE : Hub d'Ingestion RFP (ABB-01)
 
-Ce document est la source de vérité pour comprendre l'architecture, l'historique et l'utilisation du Hub d'Ingestion RFP.
+## 1. VISION STRATÉGIQUE GENAI
+L'objectif de ce hub n'est pas la simple conversion de format, mais la **certification de la donnée source** pour les systèmes RAG (Retrieval Augmented Generation). 
 
-## 1. GENÈSE ET OBJECTIF (Le "Pourquoi")
-**Problème :** L'analyse d'un appel d'offres (RFP) commence par des heures de copier-coller (2-4h).
-**Solution :** Un pipeline industriel qui transforme le "vrac" documentaire en données certifiées en moins de 30 minutes.
-**Objectif final :** Produire un Markdown structuré et des CSV qui servent de "Carburant Fiable" pour l'IA (ABB-02).
+Dans un contexte de réponse à appel d'offres (RFP), une erreur de lecture sur un SLA ou un prix peut invalider toute une offre. Ce pipeline agit comme un "pare-feu de qualité" avant l'injection dans les agents d'analyse (ABB-02).
 
-## 2. MODES OPÉRATOIRES (SBB)
+## 2. MODÈLE DE DONNÉES POUR L'IA (The "Context Window")
 
-### SBB-01A : Lecture Manuelle (Fallback)
-*Protocole à activer si le PDF est un scan de mauvaise qualité ou délai < 2j.*
-1. **Passe 1 (Cartographie)** : Identifier les sections et tableaux sans écrire. Repérer les zones denses.
-2. **Passe 2 (Extraction)** : Isoler uniquement les obligations (*shall/must/doit*) dans `REQUIREMENTS.md`.
-3. **Passe 3 (Audit)** : Recopie binaire des tableaux contractuels les plus engageants.
+L'IA ne doit pas seulement lire le texte, elle doit comprendre sa **fiabilité intrinsèque**. Le pipeline décompose chaque document en trois couches de contexte :
 
-### SBB-01B : Pipeline Docling (Automatisé)
-*Moteur IA de parsing structuré couplé à une réconciliation binaire.*
-- **Classification** : Basée sur mots-clés (CCTP, CCAP, RC, BPU).
-- **Flexibilité** : Possibilité de forcer un rôle si le nom du fichier est ambigu.
-- **Connectivité** : S'appuie sur `DOCLING_SERVE_URL` (défaut : port 5001).
+| Couche | Format | Rôle pour l'IA |
+|:--- |:--- |:--- |
+| **Sémantique** | `.md` | Structure hiérarchique pour le chunking et la navigation. |
+| **Tabulaire** | `.csv` | Données de précision (prix, matrices) extraites hors-flux pour éviter les erreurs de parsing Markdown. |
+| **Confiance** | `.json` | Métadonnées de certitude (SHA256, Confidence Score) pour pondérer le raisonnement. |
 
-## 3. MÉTRIQUES DE FIABILITÉ (Seuils de Confiance)
+## 3. LOGIQUE D'INGESTION ET RAISONNEMENT (Chain of Thought)
 
-Le pipeline marque chaque bloc de texte selon son score de confiance OCR :
-- **✅ FIABLE (> 0.90)** : Confiance totale dans l'extraction.
-- **⚠️ VIGILANCE (0.70 - 0.90)** : Risque de caractères mal reconnus. Vérification ciblée requise.
-- **🔴 CRITIQUE (< 0.70)** : Texte probablement corrompu. Validation humaine obligatoire avant usage.
+### 3.1 Classification et Routage
+Le pipeline utilise une logique de classification pour attribuer un **Rôle Contractuel**. Ce rôle définit le "Poids Juridique" d'une information :
+- **CCTP** : Source de vérité technique absolue.
+- **CCAP** : Source de vérité juridique (règles et pénalités).
+- **BPU/DPGF** : Source de vérité financière (bordereau des prix).
 
-## 4. SCHÉMA DU MANIFESTE (`MANIFEST.json`)
-C'est l'index unique de la session de travail pour les agents IA avals.
+### 3.2 Les 3 Dimensions de la Fiabilité
+1. **Fidélité Textuelle** : Comparaison entre l'IA Docling et l'extraction binaire PyMuPDF.
+2. **Intégrité Structurelle** : Maintien de l'arbre de décision (Titre > Sous-titre > Exigence).
+3. **Complétude** : Garantie qu'aucun tableau n'a été tronqué par une erreur de mise en page.
+
+## 4. MÉTRIQUES DE CONFIANCE (Quantified Quality)
+
+Le LLM consommateur doit adapter son comportement selon les seuils suivants intégrés dans le Markdown :
+
+- **✅ [CONFIANCE > 0.90]** : Traitement automatique autorisé.
+- **⚠️ [CONFIANCE 0.70 - 0.90]** : "Hallucination probable". L'IA doit ajouter une note de bas de page demandant vérification.
+- **🔴 [CONFIANCE < 0.70]** : "Donnée corrompue". L'IA doit refuser de traiter ce bloc et signaler une "rupture de chaîne de confiance".
+
+## 5. PROTOCOLES DE REPLI (Resilience)
+
+### SBB-01A : Protocole Manuel
+Si `confiance_globale < 0.60`, le système impose une lecture humaine en 3 passes :
+1. **Cartographie** (Structure)
+2. **Extraction** (Obligations uniquement)
+3. **Audit** (Recopie des tableaux critiques)
+
+### SBB-01B : "Fallback Image"
+Si Docling détecte moins de 5 blocs de texte (ex: schéma pur), le pipeline bascule en **Capture HD**. L'IA reçoit alors un bloc de texte descriptif pointant vers l'image extraite.
+
+## 6. SCHÉMA D'INTEROPÉRABILITÉ (`MANIFEST.json`)
+Ce fichier permet à un orchestrateur d'agents de piloter le lot de documents :
 ```json
 {
-  "source": "/chemin/vers/pdf",
-  "date": "2026-04-24T18:00:00",
   "statut_global": "FIABLE | VÉRIFICATION_REQUISE",
-  "details": [
-    {
-      "fichier": "nom_original.pdf",
+  "ordre_priorite": ["CCTP", "CCAP", "RC", "ANNEXES"],
+  "index": {
+    "sha256_id": {
       "role": "CCTP",
-      "sha256": "empreinte_unique",
-      "markdown_file": "rfp-structured.md",
-      "confiance_globale": 0.94
+      "markdown": "A-ingestion/doc/rfp-structured.md",
+      "csv": ["table-01.csv", "table-02.csv"],
+      "quality_score": 0.94
     }
-  ]
+  }
 }
 ```
 
-## 5. GESTION DES CAS D'ERREUR
-- **Serveur Docling inaccessible** : Le script s'arrête proprement après vérification du `/health`.
-- **Fichier Protégé/Corrompu** : Log d'erreur dans les métadonnées et poursuite du lot.
-- **Document "Image Pure"** : Déclenchement automatique de la capture HD de page si < 5 blocs texte détectés.
-
-## 6. CONSIGNES POUR LE LLM CONSOMMATEUR
-*Si tu es un LLM et que tu lis ce document :*
-1. **Hiérarchie** : Le CCTP est ta source absolue. Le CCAP définit les règles juridiques.
-2. **Intégrité** : Vérifie toujours que le SHA256 n'a pas changé entre deux analyses d'un même document.
-3. **Prudence** : Si tu extrais une donnée d'un bloc marqué 🔴 ou ⚠️, tu DOIS le mentionner dans ton output.
-4. **Localisation** : Cite toujours le fichier CSV ou la page Markdown d'origine pour chaque affirmation.
+## 7. CONSIGNES DE RAISONNEMENT POUR L'IA (System Prompting)
+*Instructions pour l'agent ABB-02 utilisant ces données :*
+1. **Ancre de Vérité** : Ne jamais inventer une exigence non présente dans le `.md`.
+2. **Gestion de l'Incertitude** : Cite systématiquement le score de confiance si `< 0.90`.
+3. **Audit de Version** : Avant toute analyse, compare le `sha256` actuel avec celui de tes archives.
+4. **Référence Tabulaire** : Pour tout chiffre financier, le `.csv` prime sur le `.md`.
 
 ---
-*Master Knowledge v1.1.0 — Prêt pour injection IA.*
+*Master Knowledge v1.2.0 — Architecture certifiée pour GenAI industrielle.*
