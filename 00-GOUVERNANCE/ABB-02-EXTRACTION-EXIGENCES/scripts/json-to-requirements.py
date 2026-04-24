@@ -1,30 +1,39 @@
 import json
 from pathlib import Path
-from datetime import date
+from datetime import datetime
 import sys
+
+def safe_markdown(text):
+    """Échappe les caractères brisant les tableaux Markdown (|)"""
+    if not text: return "N/A"
+    return str(text).replace("|", "/").replace("\n", " ").strip()
 
 def json_to_requirements(json_path: str, output_path: str, client: str, objet: str):
     """
-    Transforme le JSON produit par le LLM (Format v2.1.0) en REQUIREMENTS.md
+    Transforme le JSON robuste (v2.2.0) en REQUIREMENTS.md propre
     """
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
             full_data = json.load(f)
-            # Support du nouveau format avec 'meta' et 'extraction'
-            data = full_data.get("extraction", full_data)
+            data = full_data.get("extraction", {})
             meta = full_data.get("meta", {})
     except Exception as e:
         print(f"❌ Erreur lecture JSON : {e}")
         return
 
     lines = []
-    lines.append(f"# REQUIREMENTS — {client} — {objet} — v1.0\n\n")
+    lines.append(f"# REQUIREMENTS — {safe_markdown(client)} — {safe_markdown(objet)} — v1.0\n\n")
     lines.append(f"## Métadonnées d'extraction IA\n")
-    lines.append(f"- Date traitement : {meta.get('timestamp', date.today())}\n")
+    lines.append(f"- Date traitement : {meta.get('timestamp', 'N/A')}\n")
     lines.append(f"- Modèle utilisé : {meta.get('model', 'Inconnu')}\n")
     lines.append(f"- Statut global : EXT (Extrait)\n")
-    lines.append(f"- Source Hash : `{meta.get('source_hash', 'N/A')}`\n\n")
+    lines.append(f"- Source Hash Global : `{meta.get('source_hash', 'N/A')}`\n\n")
     
+    # Statistiques rapides
+    exigences = data.get("exigences", [])
+    critiques = data.get("exigences_critiques", [])
+    lines.append(f"**Stats :** {len(exigences)} exigences extraites, dont {len(critiques)} signalées comme critiques.\n\n")
+
     lines.append("## Référentiel des exigences\n\n")
     lines.append("| Ref | Intitulé | Type | BDAT | Prio | Statut | Origine | Flag |\n")
     lines.append("|-----|----------|------|------|------|--------|---------|------|\n")
@@ -35,24 +44,33 @@ def json_to_requirements(json_path: str, output_path: str, client: str, objet: s
         "STANDARD": "⚪"
     }
     
-    for ex in data.get("exigences", []):
+    # Tri par référence pour un rendu propre
+    sorted_ex = sorted(exigences, key=lambda x: x.get("ref", ""))
+
+    for ex in sorted_ex:
+        ref = safe_markdown(ex.get("ref"))
+        # Marquage visuel si l'exigence est dans la liste des critiques
+        if ref in critiques:
+            ref = f"**{ref}** 🔥"
+            
         flag = flag_emoji.get(ex.get("flag", "STANDARD"), "⚪")
+        
         lines.append(
-            f"| {ex.get('ref', 'N/A')} | {ex.get('intitule', 'N/A')} | "
-            f"{ex.get('type', 'N/A')} | {ex.get('bdat', 'N/A')} | {ex.get('priorite', 'N/A')} | "
-            f"EXT | {ex.get('source_origine', 'N/A')} | {flag} |\n"
+            f"| {ref} | {safe_markdown(ex.get('intitule'))} | "
+            f"{safe_markdown(ex.get('type'))} | {safe_markdown(ex.get('bdat'))} | "
+            f"{safe_markdown(ex.get('priorite'))} | EXT | "
+            f"{safe_markdown(ex.get('source_origine'))} | {flag} |\n"
         )
     
     if data.get("contradictions"):
         lines.append("\n## Contradictions / Ambiguïtés détectées\n\n")
         for c in data["contradictions"]:
-            # Gestion du cas où 'refs' est une liste ou une string
             refs = c.get("refs", [])
             ref_str = " vs ".join(refs) if isinstance(refs, list) else str(refs)
-            lines.append(f"- **{ref_str}** : {c.get('description', 'Conflit non décrit')}\n")
+            lines.append(f"- **{safe_markdown(ref_str)}** : {safe_markdown(c.get('description'))}\n")
     
     Path(output_path).write_text("".join(lines), encoding="utf-8")
-    print(f"✅ REQUIREMENTS.md généré avec succès : {output_path}")
+    print(f"✅ REQUIREMENTS.md généré avec succès ({len(exigences)} lignes).")
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
