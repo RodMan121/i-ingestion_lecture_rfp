@@ -1,53 +1,44 @@
 # 🚀 Hub d'Intelligence RFP (Standard ABB-01 & ABB-02)
 
-Ce dispositif industriel transforme le "vrac" documentaire d'un appel d'offres en une base de données d'exigences certifiée, prête pour l'aide au chiffrage et à la conception.
-
-## 🏗 Les 2 Étapes Clés
-
-### Étape 1 : ABB-01 — Ingestion & Certification
-**Objectif** : Nettoyer, structurer et auditer la donnée source (PDF, Word, Excel).
-- **Moteur** : IA Docling (Parsing structuré).
-- **Sortie** : Markdown enrichi avec scores de confiance et CSV de tableaux.
-
-### Étape 2 : ABB-02 — Extraction & Qualification
-**Objectif** : Isoler les obligations contractuelles et les classifier.
-- **Moteur** : LLM Local via Ollama (Modèle recommandé : `qwen2.5-coder:7b`).
-- **Hardware Sizing** : Utilisation de `llmfit` pour garantir l'adéquation modèle/matériel.
-- **Sortie** : `REQUIREMENTS.md` (Le référentiel central du projet).
-
-## 🛠 Installation Rapide
-
-```bash
-# 1. Environnement
-python -m venv venv-avant-vente
-source venv-avant-vente/bin/activate
-
-# 2. Dépendances & Outils
-pip install docling pandas httpx pymupdf Pillow
-curl -fsSL https://llmfit.axjns.dev/install.sh | sh # Outil de sizing LLM
-
-# 3. Moteur IA Local (Docker Ollama requis)
-docker start ollama
-docker exec ollama ollama pull qwen2.5-coder:7b
-```
-
-## 🚀 Utilisation (Cycle Complet)
-
-```bash
-# A. Ingestion (ABB-01)
-python 00-GOUVERNANCE/scripts/parse-rfp.py <source> <destination>
-
-# B. Extraction IA (ABB-02)
-python 00-GOUVERNANCE/scripts/extract-requirements.py <md_in> <prompt_in> <json_out>
-
-# C. Génération Référentiel
-python 00-GOUVERNANCE/scripts/json-to-requirements.py <json_in> <md_out> <client> <objet>
-```
-
-## 📂 Structure du Dépôt
-- `00-GOUVERNANCE/` : Scripts, Guides, Dossier d'Architecture.
-- `01-REFERENCE/` : Templates (Fiche de réception, Prompt IA).
-- `03-PROJETS/` : (Exclu de Git) Zone de travail confidentielle.
+Ce dispositif industriel est segmenté en deux blocs autonomes, chacun piloté par ses propres scripts.
 
 ---
-*Standard Industriel — Fiabilité Absolue, Zéro Hallucination.*
+
+## 🏗 Étape 1 : ABB-01 — L'Ingestion (Certification)
+**Script unique** : `00-GOUVERNANCE/scripts/parse-rfp.py`
+
+- **Objectif** : Transformer le "vrac" (PDF, XLSX) en données structurées.
+- **Entrée** : Dossier contenant les documents originaux du client.
+- **Sortie** : Dossier d'ARTEFACTS (Markdown, Tables CSV, Audit JSON).
+- **Action** :
+  ```bash
+  python 00-GOUVERNANCE/scripts/parse-rfp.py "03-PROJETS/RFP-BRUT" "03-PROJETS/ARTIFACTS"
+  ```
+
+---
+
+## 🏗 Étape 2 : ABB-02 — L'Extraction (Qualification)
+**Scripts dédiés** : `extract-multimodal.py` et `json-to-requirements.py`
+
+- **Objectif** : Isoler les obligations contractuelles à partir des ARTEFACTS.
+- **Entrée** : Le dossier d'artefacts généré par l'ABB-01.
+- **Sortie** : Le fichier `REQUIREMENTS.md` (Pivot de la réponse).
+- **Action (en 2 temps)** :
+  1. **Extraction IA** :
+     ```bash
+     python 00-GOUVERNANCE/scripts/extract-multimodal.py "path/to/artifacts" "prompt.md" "raw.json"
+     ```
+  2. **Génération du Référentiel** :
+     ```bash
+     python 00-GOUVERNANCE/scripts/json-to-requirements.py "raw.json" "REQUIREMENTS.md" "Client" "Objet"
+     ```
+
+---
+
+## 📂 Structure du Dépôt
+- `00-GOUVERNANCE/scripts/` : Le coffre-fort des scripts ABB-01 et ABB-02.
+- `00-GOUVERNANCE/` : Guides et Dossier d'Architecture.
+- `01-REFERENCE/` : Templates (Fiche de réception, Prompt IA).
+
+---
+*Fiabilité Absolue — 1 ABB = 1 Script Dédié.*
